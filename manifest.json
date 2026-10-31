@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "BETA Stoper Prezentacji Google",
+  "version": "1.5",
+  "description": "Licznik czasu i stoper wtyczki dla Google Slides",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "https://docs.google.com/presentation/d/*"
+  ],
+  "icons": {
+    "16": "Icons/Ico_ChrExt_Google_Slides_Timer_16.png",
+    "32": "Icons/Ico_ChrExt_Google_Slides_Timer_32.png",
+    "48": "Icons/Ico_ChrExt_Google_Slides_Timer_48.png",
+    "128": "Icons/Ico_ChrExt_Google_Slides_Timer_128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "Icons/Ico_ChrExt_Google_Slides_Timer_16.png",
+      "32": "Icons/Ico_ChrExt_Google_Slides_Timer_32.png",
+      "48": "Icons/Ico_ChrExt_Google_Slides_Timer_48.png",
+      "128": "Icons/Ico_ChrExt_Google_Slides_Timer_128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://docs.google.com/presentation/d/*"
+      ],
+      "js": [
+        "timer-prez-ggl.js"
+      ],
+      "all_frames": true,
+      "match_about_blank": true,
+      "run_at": "document_start"
+    }
+  ]
+}

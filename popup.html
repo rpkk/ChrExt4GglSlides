@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      width: 290px;
+      font-family: Arial, sans-serif;
+      padding: 12px;
+      margin: 0;
+      color: #333;
+    }
+    h3 {
+      margin-top: 0;
+      font-size: 16px;
+      color: #1a73e8;
+    }
+    .info-box {
+      background-color: #f1f3f4;
+      border-left: 4px solid #1a73e8;
+      padding: 8px 10px;
+      font-size: 12px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+    .warning-box {
+      background-color: #fce8e6;
+      border-left: 4px solid #d93025;
+      color: #a50e0e;
+      padding: 10px;
+      font-size: 12px;
+      border-radius: 4px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #1a73e8;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+    .log-actions {
+      display: none;
+      align-items: stretch;
+      gap: 6px;
+    }
+    .log-actions button {
+      margin-bottom: 8px;
+    }
+    .log-actions #copyBtn3 {
+      flex: 1;
+      width: auto;
+    }
+    .log-actions #deleteLogBtn {
+      flex: 0 0 44px;
+      width: 44px;
+      padding: 6px;
+      background-color: #d93025;
+    }
+    .recording-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .recording-option input {
+      margin-top: 2px;
+    }
+    #overwriteWarning {
+      display: block;
+      color: #a50e0e;
+      font-size: 11px;
+    }
+    #overwriteWarning[hidden] {
+      display: none;
+    }
+    .advanced-options {
+      margin-top: 14px;
+      font-size: 12px;
+    }
+    .advanced-options input {
+      box-sizing: border-box;
+      width: 100%;
+      margin: 8px 0;
+      padding: 7px;
+    }
+  </style>
+</head>
+<body>
+
+  <h3>⏱️ Stoper Prezentacji Google</h3>
+
+  <!-- Ostrzeżenie wyświetlane poza prezentacją ⚠️ -->
+  <div id="wrongPageMsg" class="warning-box" style="display: none;">
+    ⚠️ <strong>Wtyczka nieaktywna</strong><br>
+    Otwórz prezentację w <a href="https://docs.google.com/presentation/u/0/" target="_blank">Prezentacjach Google</a>, aby skopiować kody stoperów.
+  </div>
+
+  <!-- Główna zawartość 📦 -->
+  <div id="mainContent">
+    <div class="info-box">
+      <strong>Jak używać?</strong>
+      <p style="margin: 4px 0 6px 0;">Skopiuj poniższe kody na samym początku notatek prelegenta:</p>
+      <ul style="margin: 0; padding-left: 18px;">
+        <li>1. slajd:<br />
+        <code>{timer[00:45:00]{00:10-00:20-00:30}}</code><br />
+        <small>(Format: <code>{timer[czas prezentacji]{czas slajdu🟢-🟡-🔴}}</code>)</small></li>
+        <li style="margin-top: 4px;">Kolejne slajdy:<br />
+        <code>{timer{00:10-00:20-00:30}}</code></li>
+      </ul>
+    </div>
+
+    <button id="copyBtn1">📋 Kopiuj kod (1. slajd)</button>
+    <button id="copyBtn2">📋 Kopiuj kod (pozostałe slajdy)</button>
+    <div class="log-actions" id="logActions">
+      <button id="copyBtn3">📋 Kopiuj zapis czasów</button>
+      <button id="deleteLogBtn" type="button" aria-label="Usuń zapis"
+              title="Usuń zapis tej prezentacji">🗑️</button>
+    </div>
+    <details class="advanced-options">
+      <summary>Zaawansowane</summary>
+      <p>Aby usunąć wszystkie zapisy i ustawienia wtyczki, wpisz dokładnie:</p>
+      <strong>USUŃ WSZYSTKIE ZAPISY</strong>
+      <input id="clearDataConfirmation" type="text" autocomplete="off"
+             aria-label="Potwierdź usunięcie wszystkich zapisów">
+      <button id="clearAllDataBtn" type="button" disabled>
+        Usuń wszystkie dane wtyczki
+      </button>
+    </details>
+
+    <label class="recording-option">
+      <input type="checkbox" id="recordTimesCheckbox">
+      <span>
+        Zapisuj czasy podczas prezentacji
+        <strong id="overwriteWarning" hidden>
+          Istniejący zapis zostanie usunięty
+        </strong>
+      </span>
+    </label>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
