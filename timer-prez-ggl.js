@@ -41,6 +41,8 @@ let lastPeriodicSave = 0;
 let notesObserver = null;
 let observedNotesNode = null;
 let slideChangeTimeout = null;
+let ostatniTekstNotatek = null;
+let ostatniHash = typeof window !== "undefined" ? window.location.hash || null : null;
 const invalidatedRecordingIds = new Set();
 
 // T1 - Czas całkowity (liczy w górę wg Date.now() - bez dryfu)
@@ -403,7 +405,7 @@ function podmienPanelTimerow(kontener) {
             title="Resetuj czas slajdu (T3) – restartuje odliczanie bieżącego slajdu od nowa (np. gdy chcesz powtórzyć omawianie tego slajdu bez resetowania całej prezentacji)"
             aria-label="Resetuj czas slajdu">🔄</button>
     <button class="btn-timer btn-main-reset" id="btn-reset-all"
-            title="Zatrzymaj i zresetuj (STOP) – kończy wystąpienie, zeruje zegary i zachowuje zarejestrowane czasy w pamięci wtyczki (możesz je skopiować w popupie)"
+            title="Zatrzymaj i zapisz (STOP) – kończy wystąpienie, natychmiast utrwala ostateczny czas w pamięci wtyczki i zeruje zegary (zalecane przed zamknięciem okna)"
             aria-label="Zatrzymaj i zresetuj wszystko">⏹</button>
   `;
 
@@ -548,6 +550,15 @@ function obserwujZmianyNotatek() {
     if (nodeZostalZastapiony) {
       obserwujZmianyNotatek();
     }
+
+    const aktualnyTekst = aktualnyNodeNotatek ? aktualnyNodeNotatek.textContent.trim() : "";
+    // Ochrona przed fałszywym resetem: ignorujemy mutacje, które nie zmieniły treści notatek
+    // (np. powiększenie czcionki A+/A-, przewijanie notatek, kliknięcie myszą w kontener)
+    if (aktualnyTekst === ostatniTekstNotatek) {
+      return;
+    }
+
+    ostatniTekstNotatek = aktualnyTekst;
     zaktualizujT3DlaSlajdu();
     zaplanujZapisZmianySlajdu();
   });
@@ -559,11 +570,36 @@ function obserwujZmianyNotatek() {
   });
 }
 
-// Obsługa zmiany slajdów w prezentacji (zarówno hashchange jak i zamykanie okna)
+// Obsługa zmiany slajdów w prezentacji (hashchange)
 window.addEventListener("hashchange", () => {
-  zaktualizujT3DlaSlajdu();
-  zaplanujZapisZmianySlajdu();
-  setTimeout(zaktualizujT3DlaSlajdu, 120);
+  const aktualnyHash = window.location.hash;
+  const hashZmieniony = aktualnyHash && aktualnyHash !== ostatniHash;
+  if (hashZmieniony) {
+    ostatniHash = aktualnyHash;
+  }
+
+  // Sprawdzamy stan notatek od razu oraz z krótkim opóźnieniem (Slides może aktualizować DOM asynchronicznie)
+  const sprawdzIPrzeladuj = () => {
+    const nodeNotatek = document.querySelector(".punch-viewer-speakernotes-text-body");
+    const aktualnyTekst = nodeNotatek ? nodeNotatek.textContent.trim() : "";
+    if (hashZmieniony || (aktualnyTekst && aktualnyTekst !== ostatniTekstNotatek)) {
+      ostatniTekstNotatek = aktualnyTekst;
+      zaktualizujT3DlaSlajdu();
+      zaplanujZapisZmianySlajdu();
+    }
+  };
+
+  sprawdzIPrzeladuj();
+  setTimeout(sprawdzIPrzeladuj, 100);
+});
+
+// Zapisz migawkę przy ukryciu/minimalizacji karty (standard Page Lifecycle API)
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden" && nagrywanie && czyUruchomiony) {
+    zapiszMigawkeNagrania().catch(error => {
+      console.error("Błąd zapisu migawki przy ukryciu okna:", error);
+    });
+  }
 });
 
 window.addEventListener("beforeunload", () => {
@@ -596,9 +632,10 @@ function wykonajKrok() {
     t3PozostaloSekund = t3ProgowneSekundy.red - Math.floor(slideElapsedMs / 1000);
   }
 
-  // Okresowy zapis migawki pomiaru z throttlingiem (co 10 s) zamiast co 1000 ms
+  // Okresowy zapis migawki pomiaru z niską latencją (co 3 s zamiast 10 s)
+  // Zabezpiecza przed utratą danych przy nagłym zamknięciu okna prelegenta
   if (nagrywanie && nagrywanie.segmentStartedAt !== null) {
-    if (now - lastPeriodicSave >= 10000) {
+    if (now - lastPeriodicSave >= 3000) {
       lastPeriodicSave = now;
       zapiszMigawkeNagrania().catch(error => {
         console.error("Błąd aktualizacji zapisu czasu:", error);
@@ -610,6 +647,10 @@ function wykonajKrok() {
 }
 
 function zaladujKonfiguracjeNotatek() {
+  const nodeNotatek = document.querySelector(".punch-viewer-speakernotes-text-body");
+  ostatniTekstNotatek = nodeNotatek ? nodeNotatek.textContent.trim() : "";
+  ostatniHash = typeof window !== "undefined" ? window.location.hash || null : null;
+
   const { t2Czas, t3Progi } = parsujNotatkiSlajdu();
 
   // Ustawienie T2 (tylko jeśli podano w notatkach)
