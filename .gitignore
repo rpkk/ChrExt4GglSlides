@@ -1,0 +1,16 @@
+# Śmieci systemowe i edytorów
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Pliki środowisk IDE
+.vscode/
+.idea/
+
+# Archiwa i pliki tymczasowe
+*.zip
+*.tar.gz
+*.log
+
