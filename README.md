@@ -1,5 +1,7 @@
 # ⏱️ Stoper Prezentacji Google (Google Slides Timer)
 
+![Stoper Prezentacji Google](assets/social-preview.png)
+
 > Zaawansowane rozszerzenie do przeglądarki Google Chrome, które integruje 3-poziomowy stoper i inteligentny licznik czasu bezpośrednio w **Widoku Prelegenta (Speaker Notes)** w Prezentacjach Google.
 
 ![Wersja](https://img.shields.io/badge/wersja-1.5-blue.svg)
