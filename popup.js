@@ -10,7 +10,7 @@ let presentationId = null;
 let currentLog = null;
 
 function getPresentationId(url) {
-  return url?.match(/\/presentation\/d\/([^/]+)/)?.[1] ?? null;
+  return url?.match(/\/presentation\/d\/(?:e\/)?([^/?#]+)/)?.[1] ?? null;
 }
 
 function formatClock(milliseconds, forceHours = false) {

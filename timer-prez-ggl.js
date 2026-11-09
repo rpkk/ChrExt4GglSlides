@@ -68,10 +68,11 @@ let t3SegmentStartedAt = null;
 function czasNaSekundy(str) {
   if (!str) return 0;
   const czesci = str.trim().split(':').map(Number);
+  if (czesci.some(n => Number.isNaN(n))) return 0;
   if (czesci.length === 3) {
-    return czesci[0] * 3600 + czesci[1] * 60 + czesci[2];
+    return Math.max(0, czesci[0] * 3600 + czesci[1] * 60 + czesci[2]);
   } else if (czesci.length === 2) {
-    return czesci[0] * 60 + czesci[1];
+    return Math.max(0, czesci[0] * 60 + czesci[1]);
   }
   return 0;
 }
@@ -92,10 +93,11 @@ function formatujCzas(sekundy, wymuszajGodziny = false) {
 }
 
 function pobierzIdPrezentacji() {
-  const matchCurrent = window.location.pathname.match(/\/presentation\/d\/([^/]+)/)?.[1];
+  const extractId = path => path?.match(/\/presentation\/d\/(?:e\/)?([^/?#]+)/)?.[1] ?? null;
+  const matchCurrent = extractId(window.location.pathname);
   if (matchCurrent) return matchCurrent;
   try {
-    const matchTop = window.top?.location.pathname.match(/\/presentation\/d\/([^/]+)/)?.[1];
+    const matchTop = extractId(window.top?.location.pathname);
     if (matchTop) return matchTop;
   } catch (e) {
     // Zabezpieczenie przed ewentualnym błędem cross-origin
@@ -262,21 +264,32 @@ function parsujNotatkiSlajdu() {
   const nodeNotatek = document.querySelector(".punch-viewer-speakernotes-text-body");
   const tekstNotatek = nodeNotatek ? nodeNotatek.textContent : "";
 
-  // Wyrażenie regularne dopasowujące dwa warianty (z tolerancją na spacje, wielkość liter i format MM:SS):
-  // {timer[00:45:00]{00:10-00:20-00:30}} oraz {timer{00:10-00:20-00:30}}
-  const wzorzec = /\{timer\s*(?:\[\s*(\d{1,2}:\d{2}(?::\d{2})?)\s*\])?\s*\{\s*(\d{1,3}:\d{2})\s*-\s*(\d{1,3}:\d{2})\s*-\s*(\d{1,3}:\d{2})\s*\}\}/i;
+  // Wyrażenie regularne dopasowujące warianty (z tolerancją na spacje, wielkość liter, formaty MM:SS i HH:MM:SS):
+  // {timer[00:45:00]{00:10-00:20-00:30}}, {timer{00:10-00:20-00:30}} oraz {timer[00:45:00]}
+  const wzorzec = /\{timer(?:\s*\[\s*((?:\d{1,2}:)?\d{1,3}:\d{2})\s*\])?(?:\s*\{\s*((?:\d{1,2}:)?\d{1,3}:\d{2})\s*-\s*((?:\d{1,2}:)?\d{1,3}:\d{2})\s*-\s*((?:\d{1,2}:)?\d{1,3}:\d{2})\s*\})?\}/i;
   const dopasowanie = tekstNotatek.match(wzorzec);
 
-  if (!dopasowanie) {
+  if (!dopasowanie || (!dopasowanie[1] && !dopasowanie[2])) {
     return { t2Czas: null, t3Progi: null };
   }
 
   const t2Czas = dopasowanie[1] ? czasNaSekundy(dopasowanie[1]) : null;
-  const t3Progi = {
-    green: czasNaSekundy(dopasowanie[2]),
-    yellow: czasNaSekundy(dopasowanie[3]),
-    red: czasNaSekundy(dopasowanie[4])
-  };
+
+  let t3Progi = null;
+  if (dopasowanie[2] && dopasowanie[3] && dopasowanie[4]) {
+    // Automatycznie sortujemy progi rosnąco, zabezpieczając przed wpisaniem ich w złej kolejności
+    const progiSurowe = [
+      czasNaSekundy(dopasowanie[2]),
+      czasNaSekundy(dopasowanie[3]),
+      czasNaSekundy(dopasowanie[4])
+    ].sort((a, b) => a - b);
+
+    t3Progi = {
+      green: progiSurowe[0],
+      yellow: progiSurowe[1],
+      red: progiSurowe[2]
+    };
+  }
 
   return { t2Czas, t3Progi };
 }
@@ -288,8 +301,10 @@ function parsujNotatkiSlajdu() {
 function podmienPanelTimerow(kontener) {
   kontener.innerHTML = "";
 
-  const style = document.createElement("style");
-  style.textContent = `
+  if (!document.getElementById("custom-timer-styles")) {
+    const style = document.createElement("style");
+    style.id = "custom-timer-styles";
+    style.textContent = `
     .punch-viewer-speakernotes-timer-panel {
       width: 98% !important;
       padding: 0 !important;
@@ -377,7 +392,8 @@ function podmienPanelTimerow(kontener) {
       color: #721c24 !important;
     }
   `;
-  document.head.appendChild(style);
+    (document.head || document.documentElement).appendChild(style);
+  }
 
   const panelHTML = document.createElement("div");
   panelHTML.id = "custom-timer-container";

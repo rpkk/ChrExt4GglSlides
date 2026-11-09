@@ -97,7 +97,7 @@
   <!-- Ostrzeżenie wyświetlane poza prezentacją ⚠️ -->
   <div id="wrongPageMsg" class="warning-box" style="display: none;">
     ⚠️ <strong>Wtyczka nieaktywna</strong><br>
-    Otwórz prezentację w <a href="https://docs.google.com/presentation/u/0/" target="_blank">Prezentacjach Google</a>, aby skopiować kody stoperów.
+    Otwórz prezentację w <a href="https://docs.google.com/presentation/u/0/" target="_blank" rel="noopener noreferrer">Prezentacjach Google</a>, aby skopiować kody stoperów.
   </div>
 
   <!-- Główna zawartość 📦 -->
@@ -114,10 +114,10 @@
       </ul>
     </div>
 
-    <button id="copyBtn1">📋 Kopiuj kod (1. slajd)</button>
-    <button id="copyBtn2">📋 Kopiuj kod (pozostałe slajdy)</button>
+    <button id="copyBtn1" type="button">📋 Kopiuj kod (1. slajd)</button>
+    <button id="copyBtn2" type="button">📋 Kopiuj kod (pozostałe slajdy)</button>
     <div class="log-actions" id="logActions">
-      <button id="copyBtn3">📋 Kopiuj zapis czasów</button>
+      <button id="copyBtn3" type="button">📋 Kopiuj zapis czasów</button>
       <button id="deleteLogBtn" type="button" aria-label="Usuń zapis"
               title="Usuń zapis tej prezentacji">🗑️</button>
     </div>
